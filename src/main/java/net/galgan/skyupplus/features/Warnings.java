@@ -2,23 +2,23 @@ package net.galgan.skyupplus.features;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
-import net.galgan.skyupplus.config.Config;
+import net.galgan.skyupplus.config.SUPConfig;
 import net.galgan.skyupplus.mixin.TitleAccessor;
 import net.galgan.skyupplus.util.ServerRestrictor;
 import net.galgan.skyupplus.util.Sound;
-import net.minecraft.block.Block;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.ChatFormatting;
 
 import java.util.Set;
 
-import static net.galgan.skyupplus.features.Cooldown.states;
+import static net.galgan.skyupplus.features.Abilities.states;
 
 
 public class Warnings {
@@ -28,100 +28,100 @@ public class Warnings {
     public static void register() {
 
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
-            if (!Config.get().togglePlugWarning || !ServerRestrictor.isAllowed() || states.get(Cooldown.AbilityType.PLUG).isActive) {
-                return ActionResult.PASS;
+            if (!SUPConfig.get().warnings.togglePlugWarning || !ServerRestrictor.isAllowed() || states.get(Abilities.AbilityType.PLUG).isActive) {
+                return InteractionResult.PASS;
             }
 
             Block block = world.getBlockState(pos).getBlock();
 
             playPlugWarning = crops.contains(block);
 
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             if (!ServerRestrictor.isAllowed()) return;
 
-            boolean plugWarning = Config.get().togglePlugWarning;
-            boolean toolWarning = Config.get().toggleToolDurabilityWarning;
-            boolean armorWarning = Config.get().toggleArmorDurabilityWarning;
+            boolean plugWarning = SUPConfig.get().warnings.togglePlugWarning;
+            boolean toolWarning = SUPConfig.get().warnings.toggleToolDurabilityWarning;
+            boolean armorWarning = SUPConfig.get().warnings.toggleArmorDurabilityWarning;
 
             if (!toolWarning && !armorWarning && !plugWarning) return;
 
-            if (client.player == null || client.inGameHud == null) return;
+            if (mc.player == null) return;
 
-            TitleAccessor title = (TitleAccessor) client.inGameHud;
+            TitleAccessor title = (TitleAccessor) mc.gui.hud;
             boolean titleActive = title.getTitle() != null || title.getSubtitle() != null;
 
             if (!titleActive && plugWarning && playPlugWarning) {
-                client.inGameHud.setTitle(Text.literal("UWAGA!").formatted(Formatting.RED, Formatting.BOLD));
-                client.inGameHud.setSubtitle(Text.literal("Pług nie jest aktywny!"));
-                client.inGameHud.setTitleTicks(5, 10, 5);
-                Sound.playSound(client, warningSound(), SoundCategory.MASTER, 1.0f);
+                mc.gui.hud.setTitle(Component.literal("UWAGA!").withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+                mc.gui.hud.setSubtitle(Component.literal("Pług nie jest aktywny!"));
+                mc.gui.hud.setTimes(5, 10, 5);
+                Sound.playSound(mc, warningSound(), SoundSource.MASTER, 1.0f);
                 playPlugWarning = false;
                 titleActive = true;
             }
 
             if (!titleActive && toolWarning) {
-                int toolThreshold = Config.get().toolDurabilityThreshold;
+                int toolThreshold = SUPConfig.get().warnings.toolDurabilityThreshold;
 
-                ItemStack mainHand = client.player.getEquippedStack(EquipmentSlot.MAINHAND);
-                ItemStack offHand = client.player.getEquippedStack(EquipmentSlot.OFFHAND);
+                ItemStack mainHand = mc.player.getItemBySlot(EquipmentSlot.MAINHAND);
+                ItemStack offHand = mc.player.getItemBySlot(EquipmentSlot.OFFHAND);
 
                 boolean toolLow = compareDurability(mainHand, toolThreshold) || compareDurability(offHand, toolThreshold);
 
                 if(toolLow) {
-                    client.inGameHud.setTitle(Text.literal("UWAGA!").formatted(Formatting.RED, Formatting.BOLD));
-                    client.inGameHud.setSubtitle(Text.literal("Niskie użycia narzędzia!"));
-                    client.inGameHud.setTitleTicks(5, 10, 5);
-                    Sound.playSound(client, warningSound(), SoundCategory.MASTER, 1.0f);
+                    mc.gui.hud.setTitle(Component.literal("UWAGA!").withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+                    mc.gui.hud.setSubtitle(Component.literal("Niskie użycia narzędzia!"));
+                    mc.gui.hud.setTimes(5, 10, 5);
+                    Sound.playSound(mc, warningSound(), SoundSource.MASTER, 1.0f);
                     titleActive = true;
                 }
             }
 
             if (!titleActive && armorWarning) {
-                int armorThreshold = Config.get().armorDurabilityThreshold;
+                int armorThreshold = SUPConfig.get().warnings.armorDurabilityThreshold;
 
-                ItemStack head = client.player.getEquippedStack(EquipmentSlot.HEAD);
-                ItemStack chest = client.player.getEquippedStack(EquipmentSlot.CHEST);
-                ItemStack legs = client.player.getEquippedStack(EquipmentSlot.LEGS);
-                ItemStack feet = client.player.getEquippedStack(EquipmentSlot.FEET);
+                ItemStack head = mc.player.getItemBySlot(EquipmentSlot.HEAD);
+                ItemStack chest = mc.player.getItemBySlot(EquipmentSlot.CHEST);
+                ItemStack legs = mc.player.getItemBySlot(EquipmentSlot.LEGS);
+                ItemStack feet = mc.player.getItemBySlot(EquipmentSlot.FEET);
 
                 boolean armorLow = compareDurability(head, armorThreshold) || compareDurability(chest, armorThreshold) || compareDurability(legs, armorThreshold) || compareDurability(feet, armorThreshold);
 
                 if(armorLow) {
-                    client.inGameHud.setTitle(Text.literal("UWAGA!").formatted(Formatting.RED, Formatting.BOLD));
-                    client.inGameHud.setSubtitle(Text.literal("Niskie użycia zbroi!"));
-                    client.inGameHud.setTitleTicks(5, 10, 5);
-                    Sound.playSound(client, warningSound(), SoundCategory.MASTER, 1.0f);
+                    mc.gui.hud.setTitle(Component.literal("UWAGA!").withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+                    mc.gui.hud.setSubtitle(Component.literal("Niskie użycia zbroi!"));
+                    mc.gui.hud.setTimes(5, 10, 5);
+                    Sound.playSound(mc, warningSound(), SoundSource.MASTER, 1.0f);
                 }
             }
         });
     }
 
     private static final Set<Block> crops = Set.of(
-            net.minecraft.block.Blocks.WHEAT,
-            net.minecraft.block.Blocks.BEETROOTS,
-            net.minecraft.block.Blocks.CARROTS,
-            net.minecraft.block.Blocks.POTATOES,
-            net.minecraft.block.Blocks.NETHER_WART,
-            net.minecraft.block.Blocks.COCOA
+            net.minecraft.world.level.block.Blocks.WHEAT,
+            net.minecraft.world.level.block.Blocks.BEETROOTS,
+            net.minecraft.world.level.block.Blocks.CARROTS,
+            net.minecraft.world.level.block.Blocks.POTATOES,
+            net.minecraft.world.level.block.Blocks.NETHER_WART,
+            net.minecraft.world.level.block.Blocks.COCOA
     );
 
     private static boolean compareDurability(ItemStack stack, int durabilityThreshold) {
-        if (stack.isEmpty() || !stack.isDamageable()) return false;
+        if (stack.isEmpty() || !stack.isDamageableItem()) return false;
 
-        int percent = ((stack.getMaxDamage() - stack.getDamage()) * 100) / stack.getMaxDamage();
+        int percent = ((stack.getMaxDamage() - stack.getDamageValue()) * 100) / stack.getMaxDamage();
 
         return percent <= durabilityThreshold;
     }
 
     private static SoundEvent warningSound() {
-        return switch (Config.get().warningSound) {
-            case PLING -> SoundEvents.BLOCK_NOTE_BLOCK_PLING.value();
-            case TUBE -> SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value();
-            case BASS -> SoundEvents.BLOCK_NOTE_BLOCK_BASS.value();
-            case ANVIL -> SoundEvents.BLOCK_ANVIL_LAND;
+        return switch (SUPConfig.get().warnings.warningSound) {
+            case PLING -> SoundEvents.NOTE_BLOCK_PLING.value();
+            case TUBE -> SoundEvents.NOTE_BLOCK_DIDGERIDOO.value();
+            case BASS -> SoundEvents.NOTE_BLOCK_BASS.value();
+            case ANVIL -> SoundEvents.ANVIL_LAND;
         };
     }
 }

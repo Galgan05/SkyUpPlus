@@ -2,57 +2,60 @@ package net.galgan.skyupplus.features;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.galgan.skyupplus.config.Config;
+import net.galgan.skyupplus.config.SUPConfig;
+import net.galgan.skyupplus.config.SUPData;
 import net.galgan.skyupplus.util.ServerRestrictor;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Fishing {
     public static boolean isFishing;
-    public static List<Text> body = new ArrayList<>();
+    public static List<Component> body = new ArrayList<>();
 
     public static void register() {
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if(!ServerRestrictor.isAllowed() || client.player == null) return;
+        ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+            if(!ServerRestrictor.isAllowed() || mc.player == null) return;
 
-            ItemStack mainHand = client.player.getMainHandStack();
-            ItemStack offHand = client.player.getOffHandStack();
+            ItemStack mainHand = mc.player.getMainHandItem();
+            ItemStack offHand = mc.player.getOffhandItem();
 
-            isFishing = mainHand.isOf(Items.FISHING_ROD) || offHand.isOf(Items.FISHING_ROD);
+            isFishing = mainHand.is(Items.FISHING_ROD) || offHand.is(Items.FISHING_ROD);
 
             body = getBody();
         });
 
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-            if(!ServerRestrictor.isAllowed()) return;
+            if (!ServerRestrictor.isAllowed()) return;
+
+            var savedData = SUPData.get();
 
             String msgString = message.getString();
 
             if (!overlay && (msgString.startsWith("Wędkarstwo » ") || msgString.startsWith("Enchanty » "))) {
 
                 if (msgString.startsWith("Wędkarstwo » Wyłowiono: §7Niew")) {
-                    Config.get().niewielkaCount++;
+                    savedData.niewielkaCount++;
                 }
                 if (msgString.startsWith("Wędkarstwo » Wyłowiono: §ePrze")) {
-                    Config.get().przecietnaCount++;
+                    savedData.przecietnaCount++;
                 }
                 if (msgString.startsWith("Wędkarstwo » Wyłowiono: §aWymi")) {
-                    Config.get().wymiarowaCount++;
+                    savedData.wymiarowaCount++;
                 }
                 if (msgString.startsWith("Wędkarstwo » Wyłowiono: §6Ogro")) {
-                    Config.get().ogromnaCount++;
+                    savedData.ogromnaCount++;
                 }
                 if (msgString.startsWith("Wędkarstwo » Wyłowiono: §5Mamu")) {
-                    Config.get().mamuciaCount++;
+                    savedData.mamuciaCount++;
                 }
                 if (msgString.startsWith("Enchanty » Oprócz ryby")) {
-                    Config.get().sashimiCount++;
+                    savedData.sashimiCount++;
                 }
                 if (msgString.startsWith("Wędkarstwo » Sprz")) {
                     String price = msgString.split("za ")[1].split(" SC")[0];
@@ -60,7 +63,7 @@ public class Fishing {
                     price = price.replace(" ", "");
                     double earned = Double.parseDouble(price);
 
-                    Config.get().totalEarned += earned;
+                    savedData.totalEarned += earned;
                 }
                 if (msgString.startsWith("Wędkarstwo » Wyłowiono:")) {
                     String mass = msgString.split(" \\(")[1].split("g, ")[0];
@@ -68,87 +71,89 @@ public class Fishing {
                     mass = mass.replace(" ", "");
                     double weight = Double.parseDouble(mass);
 
-                    Config.get().totalWeight += weight;
+                    savedData.totalWeight += weight;
 
-                    if (weight > Config.get().biggestWeight || Config.get().biggestWeight == 0) Config.get().biggestWeight = weight;
-                    if (weight < Config.get().smallestWeight || Config.get().smallestWeight == 0) Config.get().smallestWeight = weight;
+                    if (weight > savedData.biggestWeight || savedData.biggestWeight == 0) savedData.biggestWeight = weight;
+                    if (weight < savedData.smallestWeight || savedData.smallestWeight == 0) savedData.smallestWeight = weight;
                 }
 
-                Config.get().totalCount = Config.get().niewielkaCount + Config.get().przecietnaCount + Config.get().wymiarowaCount + Config.get().ogromnaCount + Config.get().mamuciaCount;
-                Config.save();
+                savedData.totalCount = savedData.niewielkaCount + savedData.przecietnaCount + savedData.wymiarowaCount
+                        + savedData.ogromnaCount + savedData.mamuciaCount;
+
+                SUPData.save();
             }
         });
     }
 
-    public static List<Text> getBody() {
-        List<Text> bodyText = new ArrayList<>();
+    public static List<Component> getBody() {
+        List<Component> bodyText = new ArrayList<>();
 
-        if (Config.get().fishingDisplayBehavior == Config.ConditionalDisplayBehavior.ALWAYS || (Fishing.isFishing && Config.get().fishingDisplayBehavior == Config.ConditionalDisplayBehavior.CONDITIONAL)) {
+        if (SUPConfig.get().fishing.fishingDisplayBehavior == SUPConfig.FishingDisplayBehavior.ALWAYS || (Fishing.isFishing && SUPConfig.get().fishing.fishingDisplayBehavior == SUPConfig.FishingDisplayBehavior.FISHING)) {
 
-            if (Config.get().toggleNiewielka) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Niewielka: ").formatted(Formatting.GRAY))
-                        .append(Text.literal(String.valueOf(Config.get().niewielkaCount)).formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleNiewielka) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Niewielka: ").withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal(String.valueOf(SUPData.get().niewielkaCount)).withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().togglePrzecietna) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Przeciętna: ").formatted(Formatting.YELLOW))
-                        .append(Text.literal(String.valueOf(Config.get().przecietnaCount)).formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.togglePrzecietna) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Przeciętna: ").withStyle(ChatFormatting.YELLOW))
+                        .append(Component.literal(String.valueOf(SUPData.get().przecietnaCount)).withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleWymiarowa) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Wymiarowa: ").formatted(Formatting.GREEN))
-                        .append(Text.literal(String.valueOf(Config.get().wymiarowaCount)).formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleWymiarowa) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Wymiarowa: ").withStyle(ChatFormatting.GREEN))
+                        .append(Component.literal(String.valueOf(SUPData.get().wymiarowaCount)).withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleOgromna) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Ogromna: ").formatted(Formatting.GOLD))
-                        .append(Text.literal(String.valueOf(Config.get().ogromnaCount)).formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleOgromna) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Ogromna: ").withStyle(ChatFormatting.GOLD))
+                        .append(Component.literal(String.valueOf(SUPData.get().ogromnaCount)).withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleMamucia) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Mamucia: ").formatted(Formatting.DARK_PURPLE))
-                        .append(Text.literal(String.valueOf(Config.get().mamuciaCount)).formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleMamucia) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Mamucia: ").withStyle(ChatFormatting.DARK_PURPLE))
+                        .append(Component.literal(String.valueOf(SUPData.get().mamuciaCount)).withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleSuma) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Suma: ").formatted(Formatting.BLUE))
-                        .append(Text.literal(String.valueOf(Config.get().totalCount)).formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleSuma) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Suma: ").withStyle(ChatFormatting.BLUE))
+                        .append(Component.literal(String.valueOf(SUPData.get().totalCount)).withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleZarobek) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Zarobek: ").formatted(Formatting.AQUA))
-                        .append(Text.literal(String.format("%.2f", Config.get().totalEarned)).append(" SC").formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleZarobek) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Zarobek: ").withStyle(ChatFormatting.AQUA))
+                        .append(Component.literal(String.format("%.2f", SUPData.get().totalEarned)).append(" SC").withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleWaga) {
-                if (Config.get().totalWeight < 1000) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Waga: ").formatted(Formatting.LIGHT_PURPLE))
-                            .append(Text.literal(String.format("%.2f", Config.get().totalWeight)).append("g").formatted(Formatting.WHITE)));
-                } else if (Config.get().totalWeight < 1000000) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Waga: ").formatted(Formatting.LIGHT_PURPLE))
-                            .append(Text.literal(String.format("%.2f", Config.get().totalWeight/1000)).append("kg").formatted(Formatting.WHITE)));
-                } else if (Config.get().totalWeight >= 1000000) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Waga: ").formatted(Formatting.LIGHT_PURPLE))
-                            .append(Text.literal(String.format("%.3f", Config.get().totalWeight/1000000)).append("t").formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleWaga) {
+                if (SUPData.get().totalWeight < 1000) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Waga: ").withStyle(ChatFormatting.LIGHT_PURPLE))
+                            .append(Component.literal(String.format("%.2f", SUPData.get().totalWeight)).append("g").withStyle(ChatFormatting.WHITE)));
+                } else if (SUPData.get().totalWeight < 1000000) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Waga: ").withStyle(ChatFormatting.LIGHT_PURPLE))
+                            .append(Component.literal(String.format("%.2f", SUPData.get().totalWeight/1000)).append("kg").withStyle(ChatFormatting.WHITE)));
+                } else if (SUPData.get().totalWeight >= 1000000) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Waga: ").withStyle(ChatFormatting.LIGHT_PURPLE))
+                            .append(Component.literal(String.format("%.3f", SUPData.get().totalWeight/1000000)).append("t").withStyle(ChatFormatting.WHITE)));
                 }
             }
-            if (Config.get().toggleNajwieksza) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Max: ").formatted(Formatting.DARK_GREEN))
-                        .append(Text.literal(String.format("%.2f", Config.get().biggestWeight)).append("g").formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleNajwieksza) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Max: ").withStyle(ChatFormatting.DARK_GREEN))
+                        .append(Component.literal(String.format("%.2f", SUPData.get().biggestWeight)).append("g").withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleNajmniejsza) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Min: ").formatted(Formatting.DARK_RED))
-                        .append(Text.literal(String.format("%.2f", Config.get().smallestWeight)).append("g").formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleNajmniejsza) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Min: ").withStyle(ChatFormatting.DARK_RED))
+                        .append(Component.literal(String.format("%.2f", SUPData.get().smallestWeight)).append("g").withStyle(ChatFormatting.WHITE)));
             }
-            if (Config.get().toggleSashimi) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Sashimi: ").formatted(Formatting.DARK_AQUA))
-                        .append(Text.literal(String.valueOf(Config.get().sashimiCount)).formatted(Formatting.WHITE)));
+            if (SUPConfig.get().fishing.fish.toggleSashimi) {
+                bodyText.add(Component.empty()
+                        .append(Component.literal("Sashimi: ").withStyle(ChatFormatting.DARK_AQUA))
+                        .append(Component.literal(String.valueOf(SUPData.get().sashimiCount)).withStyle(ChatFormatting.WHITE)));
             }
         }
 

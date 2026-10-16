@@ -3,13 +3,13 @@ package net.galgan.skyupplus.features;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.galgan.skyupplus.util.Number;
 import net.galgan.skyupplus.util.ServerRestrictor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.ScoreboardEntry;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.PlayerScoreEntry;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 public class Scoreboard {
 
-    public static List<Text> body = new ArrayList<>();
+    public static List<Component> body = new ArrayList<>();
 
     private static List<String> cleanBody = new ArrayList<>();
     private static String sc = "-";
@@ -28,7 +28,7 @@ public class Scoreboard {
     private static String limit = "-";
     private static String reset = "-";
     private static String bonus = "-";
-    private static List<Text> abilities = new ArrayList<>();
+    private static List<Component> abilities = new ArrayList<>();
 
     private static boolean customScoreboard;
 
@@ -36,11 +36,11 @@ public class Scoreboard {
 
     public static void register() {
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             if(!ServerRestrictor.isAllowed()) return;
-            if (client.player == null) return;
+            if (mc.player == null) return;
 
-            cleanBody = getCustomBody(client);
+            cleanBody = getCustomBody(mc);
 
             customScoreboard = false;
             bonus = "-";
@@ -78,42 +78,42 @@ public class Scoreboard {
             if (customScoreboard) {
                 body = getCustomScoreboard();
             } else {
-                body = getDefaultScoreboard(client);
+                body = getDefaultScoreboard(mc);
             }
 
             abilities.clear();
         });
     }
 
-    private static List<Text> getCustomScoreboard() {
-        List<Text> bodyText = new ArrayList<>();
+    private static List<Component> getCustomScoreboard() {
+        List<Component> bodyText = new ArrayList<>();
 
-        bodyText.add(Text.empty()
-                .append(Text.literal("Portfel: ").formatted(Formatting.RED))
-                .append(Text.literal(sc).formatted(Formatting.YELLOW)));
-        bodyText.add(Text.empty()
-                .append(Text.literal("Punkty: ").formatted(Formatting.RED))
-                .append(Text.literal(sp).formatted(Formatting.YELLOW)));
-        bodyText.add(Text.empty()
-                .append(Text.literal("Tokeny: ").formatted(Formatting.RED))
-                .append(Text.literal(st).formatted(Formatting.YELLOW)));
-        bodyText.add(Text.empty()
-                .append(Text.literal("Bank: ").formatted(Formatting.AQUA))
-                .append(Text.literal(bank).formatted(Formatting.YELLOW)));
-        bodyText.add(Text.empty()
-                .append(Text.literal("Poziom: ").formatted(Formatting.AQUA))
-                .append(Text.literal(level).formatted(Formatting.YELLOW)));
-        bodyText.add(Text.empty()
-                .append(Text.literal("Limit: ").formatted(Formatting.GREEN))
-                .append(Text.literal(limit).formatted(Formatting.YELLOW)));
-        bodyText.add(Text.empty()
-                .append(Text.literal("Reset: ").formatted(Formatting.GREEN))
-                .append(Text.literal(reset).formatted(Formatting.YELLOW)));
+        bodyText.add(Component.empty()
+                .append(Component.literal("Portfel: ").withStyle(ChatFormatting.RED))
+                .append(Component.literal(sc).withStyle(ChatFormatting.YELLOW)));
+        bodyText.add(Component.empty()
+                .append(Component.literal("Punkty: ").withStyle(ChatFormatting.RED))
+                .append(Component.literal(sp).withStyle(ChatFormatting.YELLOW)));
+        bodyText.add(Component.empty()
+                .append(Component.literal("Tokeny: ").withStyle(ChatFormatting.RED))
+                .append(Component.literal(st).withStyle(ChatFormatting.YELLOW)));
+        bodyText.add(Component.empty()
+                .append(Component.literal("Bank: ").withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(bank).withStyle(ChatFormatting.YELLOW)));
+        bodyText.add(Component.empty()
+                .append(Component.literal("Poziom: ").withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(level).withStyle(ChatFormatting.YELLOW)));
+        bodyText.add(Component.empty()
+                .append(Component.literal("Limit: ").withStyle(ChatFormatting.GREEN))
+                .append(Component.literal(limit).withStyle(ChatFormatting.YELLOW)));
+        bodyText.add(Component.empty()
+                .append(Component.literal("Reset: ").withStyle(ChatFormatting.GREEN))
+                .append(Component.literal(reset).withStyle(ChatFormatting.YELLOW)));
 
         if (!bonus.equals("-")) {
-            bodyText.add(Text.empty()
-                    .append(Text.literal("Bonus: ").formatted(Formatting.GOLD))
-                    .append(Text.literal(bonus).formatted(Formatting.YELLOW)));
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Bonus: ").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal(bonus).withStyle(ChatFormatting.YELLOW)));
         }
 
         if (abilities != null && !abilities.isEmpty()) {
@@ -123,31 +123,27 @@ public class Scoreboard {
         return bodyText;
     }
 
-    private static List<String> getCustomBody(MinecraftClient client) {
-        if (client.world == null) return List.of();
+    private static List<String> getCustomBody(Minecraft mc) {
+        if (mc.level == null) return List.of();
 
-        net.minecraft.scoreboard.Scoreboard scoreboard = client.world.getScoreboard();
-        ScoreboardObjective sidebar = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
+        net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
+        Objective sidebar = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
 
         if (sidebar == null) return List.of();
 
-        List<ScoreboardEntry> entries = new ArrayList<>(scoreboard.getScoreboardEntries(sidebar));
+        List<PlayerScoreEntry> entries = new ArrayList<>(scoreboard.listPlayerScores(sidebar));
 
         entries.sort(Comparator
-                .comparingInt(ScoreboardEntry::value).reversed()
-                .thenComparing(ScoreboardEntry::owner));
+                .comparingInt(PlayerScoreEntry::value).reversed()
+                .thenComparing(PlayerScoreEntry::owner));
 
         List<String> cleanBody = new ArrayList<>();
 
-        for (ScoreboardEntry entry : entries) {
-            if (entry.hidden()) continue;
+        for (PlayerScoreEntry entry : entries) {
+            if (entry.isHidden()) continue;
 
-            Text line = entry.name();
-
-            Team team = scoreboard.getScoreHolderTeam(entry.owner());
-            if (team != null) {
-                line = Team.decorateName(team, line.copy());
-            }
+            PlayerTeam team = scoreboard.getPlayersTeam(entry.owner());
+            Component line = PlayerTeam.formatNameForTeam(team, entry.ownerName());
 
             String lineString = line.getString();
 
@@ -167,32 +163,28 @@ public class Scoreboard {
         return cleanBody;
     }
 
-    private static List<Text> getDefaultScoreboard(MinecraftClient client) {
-        if (client.world == null) return List.of();
+    private static List<Component> getDefaultScoreboard(Minecraft mc) {
+        if (mc.level == null) return List.of();
 
-        net.minecraft.scoreboard.Scoreboard scoreboard = client.world.getScoreboard();
-        ScoreboardObjective sidebar = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
+        net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
+        Objective sidebar = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
 
         if (sidebar == null) return List.of();
 
-        List<ScoreboardEntry> entries = new ArrayList<>(scoreboard.getScoreboardEntries(sidebar));
+        List<PlayerScoreEntry> entries = new ArrayList<>(scoreboard.listPlayerScores(sidebar));
 
         entries.sort(Comparator
-                .comparingInt(ScoreboardEntry::value).reversed()
-                .thenComparing(ScoreboardEntry::owner));
+                .comparingInt(PlayerScoreEntry::value).reversed()
+                .thenComparing(PlayerScoreEntry::owner));
 
-        List<Text> lines = new ArrayList<>();
+        List<Component> lines = new ArrayList<>();
 
-        for (ScoreboardEntry entry : entries) {
-            if (entry.hidden()) continue;
+        for (PlayerScoreEntry entry : entries) {
+            if (entry.isHidden()) continue;
             if (lines.size() >= 15) break;
 
-            Text line = entry.name();
-
-            Team team = scoreboard.getScoreHolderTeam(entry.owner());
-            if (team != null) {
-                line = Team.decorateName(team, line.copy());
-            }
+            PlayerTeam team = scoreboard.getPlayersTeam(entry.owner());
+            Component line = PlayerTeam.formatNameForTeam(team, entry.ownerName());
 
             if (line.getString().startsWith(" §a§5")) continue;
 

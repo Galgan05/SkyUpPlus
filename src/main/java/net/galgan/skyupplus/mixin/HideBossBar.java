@@ -1,8 +1,8 @@
 package net.galgan.skyupplus.mixin;
 
-import net.galgan.skyupplus.config.Config;
-import net.minecraft.client.gui.hud.BossBarHud;
-import net.minecraft.entity.boss.BossBar;
+import net.galgan.skyupplus.config.SUPConfig;
+import net.minecraft.client.gui.components.BossHealthOverlay;
+import net.minecraft.world.BossEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-@Mixin(BossBarHud.class)
+@Mixin(BossHealthOverlay.class)
 public abstract class HideBossBar {
 
     @Unique
@@ -27,8 +27,8 @@ public abstract class HideBossBar {
     };
 
     @Unique
-    private static boolean shouldHide(BossBar bar) {
-        if (!Config.get().customAbilities) return false;
+    private static boolean shouldHide(BossEvent bar) {
+        if (!SUPConfig.get().abilities.customAbilities) return false;
 
         String name = bar.getName().getString();
         for (String prefix : ABILITY_NAMES) {
@@ -38,16 +38,15 @@ public abstract class HideBossBar {
     }
 
     @Redirect(
-            method = "render(Lnet/minecraft/client/gui/DrawContext;)V",
+            method = "extractRenderState",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"),
             require = 1
     )
 
     private Collection<?> filterValues(Map<?, ?> map) {
         var list = new ArrayList<>(map.values());
-        list.removeIf(v -> v instanceof BossBar bar && shouldHide(bar));
+        list.removeIf(v -> v instanceof BossEvent bar && shouldHide(bar));
         return list;
     }
 
 }
-

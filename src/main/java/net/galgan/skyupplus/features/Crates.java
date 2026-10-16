@@ -2,16 +2,19 @@ package net.galgan.skyupplus.features;
 
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
-import net.galgan.skyupplus.config.Config;
+import net.galgan.skyupplus.config.HudPosition;
+import net.galgan.skyupplus.config.SUPConfig;
+import net.galgan.skyupplus.config.SUPData;
 import net.galgan.skyupplus.util.DrawUtil;
+import net.galgan.skyupplus.util.HudElement;
 import net.galgan.skyupplus.util.ServerRestrictor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +22,22 @@ import java.util.List;
 public class Crates {
 
     private static String playerName;
-    public static List<Text> body = new ArrayList<>();
+    public static List<Component> body = new ArrayList<>();
     public static int color = 0xFFFFFFFF;
     
     public static void register() {
 
-        ScreenEvents.BEFORE_INIT.register((client, screen, w, h) -> {
+        ScreenEvents.BEFORE_INIT.register((mc, screen, w, h) -> {
             if(!ServerRestrictor.isAllowed()) return;
 
-            var cfg = Config.get();
+            var elementium = SUPConfig.get().crates.elementium;
+            var platinum = SUPConfig.get().crates.platinum;
+            var other = SUPConfig.get().crates.other;
+            var savedData = SUPData.get();
 
-            List<Text> bodyText = new ArrayList<>();
+            List<Component> bodyText = new ArrayList<>();
 
-            if (!(screen instanceof HandledScreen<?> handled)) {
+            if (!(screen instanceof AbstractContainerScreen<?> handled)) {
                 body = bodyText;
                 color = 0xFFFFFFFF;
                 return;
@@ -43,140 +49,160 @@ public class Crates {
             if (title.contains("\uE001\uE080\uE002") || title.contains("\uE001\uE170\uE002")) {
                 color = 0xFF55FFFF;
 
-                if (cfg.karambitToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Karambit: ").formatted(Formatting.DARK_RED, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.karambitDropped)).formatted(Formatting.WHITE)));
+                if (elementium.karambitToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Karambit ").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.karambitDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.perunToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Perun: ").formatted(Formatting.GOLD, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.perunDropped)).formatted(Formatting.WHITE)));
+                if (elementium.perunToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Perun ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.perunDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.cymofanToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Cymofan: ").formatted(Formatting.GOLD, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.cymofanDropped)).formatted(Formatting.WHITE)));
+                if (elementium.cymofanToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Cymofan ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.cymofanDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.mlotThoraToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Młot Thora: ").formatted(Formatting.RED, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.mlotThoraDropped)).formatted(Formatting.WHITE)));
+                if (elementium.mlotThoraToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Młot Thora ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.mlotThoraDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.urizelToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Urizel: ").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.urizelDropped)).formatted(Formatting.WHITE)));
+                if (elementium.urizelToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Urizel ").withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.urizelDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.azadaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Azada: ").formatted(Formatting.GREEN, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.azadaDropped)).formatted(Formatting.WHITE)));
+                if (elementium.azadaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Azada ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.azadaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.spinelToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Spinel: ").formatted(Formatting.YELLOW, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.spinelDropped)).formatted(Formatting.WHITE)));
+                if (elementium.spinelToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Spinel ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.spinelDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.karpiolapToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Karpiołap: ").formatted(Formatting.YELLOW, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.karpiolapDropped)).formatted(Formatting.WHITE)));
+                if (elementium.karpiolapToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Karpiołap ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.karpiolapDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.ethericaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Etherica: ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xA956FC)).withBold(true)))
-                            .append(Text.literal(String.valueOf(cfg.ethericaDropped)).formatted(Formatting.WHITE)));
+                if (elementium.ethericaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Etherica ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xA956FC)).withBold(true)))
+                            .append(Component.literal("x" + savedData.ethericaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.lukLegolasaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Łuk Legolasa: ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x56FCA9)).withBold(true)))
-                            .append(Text.literal(String.valueOf(cfg.lukLegolasaDropped)).formatted(Formatting.WHITE)));
+                if (elementium.lukLegolasaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Łuk Legolasa ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x56FCA9)).withBold(true)))
+                            .append(Component.literal("x" + savedData.lukLegolasaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.arbaletToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Arbalet: ").formatted(Formatting.GOLD, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.arbaletDropped)).formatted(Formatting.WHITE)));
+                if (elementium.arbaletToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Arbalet ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.arbaletDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.powrotOdysaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Powrót Odysa: ").formatted(Formatting.GREEN, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.powrotOdysaDropped)).formatted(Formatting.WHITE)));
+                if (elementium.powrotOdysaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Powrót Odysa ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.powrotOdysaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.cassisToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Cassis: ").formatted(Formatting.AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.cassisDropped)).formatted(Formatting.WHITE)));
+                if (elementium.cassisToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Cassis ").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.cassisDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.cuirassToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Cuirass: ").formatted(Formatting.AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.cuirassDropped)).formatted(Formatting.WHITE)));
+                if (elementium.cuirassToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Cuirass ").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.cuirassDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.cuissotToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Cuissot: ").formatted(Formatting.AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.cuissotDropped)).formatted(Formatting.WHITE)));
+                if (elementium.cuissotToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Cuissot ").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.cuissotDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.cossetToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Cosset: ").formatted(Formatting.AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.cossetDropped)).formatted(Formatting.WHITE)));
+                if (elementium.cossetToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Cosset ").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.cossetDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.kapcieLotnikaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Kapcie lotnika: ").formatted(Formatting.AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.kapcieLotnikaDropped)).formatted(Formatting.WHITE)));
+                if (elementium.maskaGlebinowcaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kaptur sztormowy ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kapturSztormowyDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.rivendellToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Rivendell: ").formatted(Formatting.YELLOW, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.rivendellDropped)).formatted(Formatting.WHITE)));
+                if (elementium.plaszczLesnikaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kamizelka biwakowa ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kamizelkaBiwakowaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.impetToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Impet: ").formatted(Formatting.GREEN, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.impetDropped)).formatted(Formatting.WHITE)));
+                if (elementium.nogawiceStrazaka) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Nogawice ognioodporne ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.nogawiceOgnioodporneDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.phloxToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Phlox: ").formatted(Formatting.RED, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.phloxDropped)).formatted(Formatting.WHITE)));
+                if (elementium.kapcieLotnikaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Trapery terenowe ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.traperyTerenoweDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.majsterToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Majster: ").formatted(Formatting.GOLD, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.majsterDropped)).formatted(Formatting.WHITE)));
+                if (elementium.rivendellToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Rivendell ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.rivendellDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.magiczneWiaderkoToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Magiczne wiaderko: ").formatted(Formatting.AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.magiczneWiaderkoDropped)).formatted(Formatting.WHITE)));
+                if (elementium.impetToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Impet ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.impetDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.statTrackerToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("StatTracker: ").formatted(Formatting.GOLD, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.statTrackerDropped)).formatted(Formatting.WHITE)));
+                if (elementium.phloxToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Phlox ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.phloxDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.jajkoNiespodziankaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Jajko niespodzianka: ").formatted(Formatting.RED, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.jajkoNiespodziankaDropped)).formatted(Formatting.WHITE)));
+                if (elementium.majsterToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Majster ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.majsterDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.klejnotKupieckiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Klejnot kupiecki: ").formatted(Formatting.YELLOW, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.klejnotKupieckiDropped)).formatted(Formatting.WHITE)));
+                if (elementium.magiczneWiaderkoToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Magiczne wiaderko ").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.magiczneWiaderkoDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.kontrolerMagazynowToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Kontroler magazynów: ").formatted(Formatting.GOLD, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.kontrolerMagazynowDropped)).formatted(Formatting.WHITE)));
+                if (elementium.statTrackerToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("StatTracker ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.statTrackerDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.tajemniceSkyUPaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Tajemnice SkyUPa: ").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.tajemniceSkyUPaDropped)).formatted(Formatting.WHITE)));
+                if (elementium.jajkoNiespodziankaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Jajko niespodzianka ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.jajkoNiespodziankaDropped).withStyle(ChatFormatting.WHITE)));
+                }
+                if (elementium.kontrolerMagazynowToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kontroler magazynów ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kontrolerMagazynowDropped).withStyle(ChatFormatting.WHITE)));
+                }
+                if (elementium.kapeluszPracusiaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kapelusz pracusia ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kapeluszPracusiaDropped).withStyle(ChatFormatting.WHITE)));
+                }
+                if (elementium.tajemniceSkyUPaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Tajemnice SkyUPa v.5").withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.tajemniceSkyUPaDropped).withStyle(ChatFormatting.WHITE)));
+                }
+                if (elementium.klejnotKupieckiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Klejnot kupiecki ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.klejnotKupieckiDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -184,50 +210,50 @@ public class Crates {
             } else if (title.contains("\uE001\uE081\uE002") || title.contains("\uE001\uE171\uE002")) {
                 color = 0xFF55FF55;
 
-                if (cfg.elementiumToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Elementium: ").formatted(Formatting.AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.elementiumDropped)).formatted(Formatting.WHITE)));
+                if (platinum.elementiumToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Elementium ").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.elementiumDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.mendingToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Mending: ").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.mendingDropped)).formatted(Formatting.WHITE)));
+                if (platinum.mendingToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Mending ").withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.mendingDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.emeraldBlockToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Blok szmaragdu: ").formatted(Formatting.GREEN, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.emeraldBlockDropped)).formatted(Formatting.WHITE)));
+                if (platinum.emeraldBlockToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Blok szmaragdu ").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.emeraldBlockDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.goldBlockToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Blok złota: ").formatted(Formatting.YELLOW, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.goldBlockDropped)).formatted(Formatting.WHITE)));
+                if (platinum.goldBlockToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Blok złota ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.goldBlockDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.ironBlockToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Blok żelaza: ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xDCDCDC)).withBold(true)))
-                            .append(Text.literal(String.valueOf(cfg.ironBlockDropped)).formatted(Formatting.WHITE)));
+                if (platinum.ironBlockToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Blok żelaza ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xDCDCDC)).withBold(true)))
+                            .append(Component.literal("x" + savedData.ironBlockDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.redstoneBlockToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Blok redstone: ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xB01905)).withBold(true)))
-                            .append(Text.literal(String.valueOf(cfg.redstoneBlockDropped)).formatted(Formatting.WHITE)));
+                if (platinum.redstoneBlockToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Blok redstone ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xB01905)).withBold(true)))
+                            .append(Component.literal("x" + savedData.redstoneBlockDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.dirtToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Ziemia: ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x866043)).withBold(true)))
-                            .append(Text.literal(String.valueOf(cfg.dirtDropped)).formatted(Formatting.WHITE)));
+                if (platinum.dirtToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Ziemia ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x866043)).withBold(true)))
+                            .append(Component.literal("x" + savedData.dirtDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.grassBlockToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Blok trawy: ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x2FA81F)).withBold(true)))
-                            .append(Text.literal(String.valueOf(cfg.grassBlockDropped)).formatted(Formatting.WHITE)));
+                if (platinum.grassBlockToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Blok trawy ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x2FA81F)).withBold(true)))
+                            .append(Component.literal("x" + savedData.grassBlockDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.sandToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Piasek: ").formatted(Formatting.YELLOW, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.sandDropped)).formatted(Formatting.WHITE)));
+                if (platinum.sandToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Piasek ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.sandDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -235,10 +261,10 @@ public class Crates {
             } else if (title.contains("\uE001\uE082\uE002") || title.contains("\uE001\uE172\uE002")) {
                 color = 0xFFAAAAAA;
 
-                if (cfg.czapkiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Kask Górnika: ").formatted(Formatting.GRAY, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.kaskGornikaDropped)).formatted(Formatting.WHITE)));
+                if (other.czapkiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kask Górnika ").withStyle(ChatFormatting.GRAY, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kaskGornikaDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -246,10 +272,10 @@ public class Crates {
             } else if (title.contains("\uE001\uE083\uE002") || title.contains("\uE001\uE173\uE002")) {
                 color = 0xFF00AA00;
 
-                if (cfg.czapkiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Czapka Drwala: ").formatted(Formatting.DARK_GREEN, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.czapkaDrwalaDropped)).formatted(Formatting.WHITE)));
+                if (other.czapkiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Czapka Drwala ").withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.czapkaDrwalaDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -257,10 +283,10 @@ public class Crates {
             } else if (title.contains("\uE001\uE084\uE002") || title.contains("\uE001\uE174\uE002")) {
                 color = 0xFFFFFF55;
 
-                if (cfg.czapkiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Kapelusz Farmera: ").formatted(Formatting.YELLOW, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.kapeluszFarmeraDropped)).formatted(Formatting.WHITE)));
+                if (other.czapkiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kapelusz Farmera ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kapeluszFarmeraDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -268,10 +294,10 @@ public class Crates {
             } else if (title.contains("\uE001\uE085\uE002") || title.contains("\uE001\uE175\uE002")) {
                 color = 0xFFFF5555;
 
-                if (cfg.czapkiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Bandana Łowcy: ").formatted(Formatting.RED, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.bandanaLowcyDropped)).formatted(Formatting.WHITE)));
+                if (other.czapkiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Bandana Łowcy ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.bandanaLowcyDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -279,10 +305,10 @@ public class Crates {
             } else if (title.contains("\uE001\uE086\uE002") || title.contains("\uE001\uE176\uE002")) {
                 color = 0xFF00AAAA;
 
-                if (cfg.czapkiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Kask Budowniczego: ").formatted(Formatting.DARK_AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.kaskBudowniczegoDropped)).formatted(Formatting.WHITE)));
+                if (other.czapkiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kask Budowniczego ").withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kaskBudowniczegoDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -290,25 +316,25 @@ public class Crates {
             } else if (title.contains("\uE001\uE087\uE002") || title.contains("\uE001\uE177\uE002")) {
                 color = 0xFF5555FF;
 
-                if (cfg.czapkiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Kapelusz Rybaka: ").formatted(Formatting.BLUE, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.kapeluszRybakaDropped)).formatted(Formatting.WHITE)));
+                if (other.czapkiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kapelusz Rybaka ").withStyle(ChatFormatting.BLUE, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kapeluszRybakaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.oceanicznaRudaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Oceaniczna ruda: ").formatted(Formatting.DARK_AQUA, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.oceanicznaRudaDropped)).formatted(Formatting.WHITE)));
+                if (other.oceanicznaRudaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Oceaniczna ruda ").withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.oceanicznaRudaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.wybitnaPrzynetaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Wybitna przynęta: ").formatted(Formatting.DARK_PURPLE, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.wybitnaPrzynetaDropped)).formatted(Formatting.WHITE)));
+                if (other.wybitnaPrzynetaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Wybitna przynęta ").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.wybitnaPrzynetaDropped).withStyle(ChatFormatting.WHITE)));
                 }
-                if (cfg.wybitnaPrzynetaToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Dobra przynęta: ").formatted(Formatting.GOLD, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.dobraPrzynetaDropped)).formatted(Formatting.WHITE)));
+                if (other.dobraPrzynetaToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Dobra przynęta ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.dobraPrzynetaDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -316,10 +342,10 @@ public class Crates {
             } else if (title.contains("\uE001\uE088\uE002") || title.contains("\uE001\uE178\uE002")) {
                 color = 0xFFFF55FF;
 
-                if (cfg.czapkiToggle) {
-                    bodyText.add(Text.empty()
-                            .append(Text.literal("Kapelusz Czarodzieja: ").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
-                            .append(Text.literal(String.valueOf(cfg.kapeluszCzarodziejaDropped)).formatted(Formatting.WHITE)));
+                if (other.czapkiToggle) {
+                    bodyText.add(Component.empty()
+                            .append(Component.literal("Kapelusz Czarodzieja ").withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD))
+                            .append(Component.literal("x" + savedData.kapeluszCzarodziejaDropped).withStyle(ChatFormatting.WHITE)));
                 }
                 body = bodyText;
 
@@ -329,7 +355,7 @@ public class Crates {
             }
 
             if (!body.isEmpty()) {
-                ScreenEvents.afterRender(screen).register((s, ctx, mouseX, mouseY, delta) -> DrawUtil.drawWidget(ctx, color, Config.DisplayLocation.MIDDLE_LEFT, body));
+                ScreenEvents.afterExtract(screen).register((s, ctx, mouseX, mouseY, delta) -> DrawUtil.drawWidget(ctx, color, HudElement.CRATES.position(), body));
             }
         });
 
@@ -338,395 +364,417 @@ public class Crates {
 
             String msgString = message.getString();
 
+            var savedData = SUPData.get();
+
             if (!overlay && msgString.startsWith("SkyCase »")) {
-                MinecraftClient client = MinecraftClient.getInstance();
-                ClientPlayerEntity player = client.player;
+                Minecraft mc = Minecraft.getInstance();
+                LocalPlayer player = mc.player;
 
                 if (player != null) playerName = player.getName().getString();
 
                 //OTHERS
                 if (msgString.startsWith("SkyCase » Wygrano: Kask Górnika")) {
-                    Config.get().kaskGornikaDropped += 1;
-                    Config.save();
+                    savedData.kaskGornikaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Czapka Drwala")) {
-                    Config.get().czapkaDrwalaDropped += 1;
-                    Config.save();
+                    savedData.czapkaDrwalaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Kapelusz Farmera")) {
-                    Config.get().kapeluszFarmeraDropped += 1;
-                    Config.save();
+                    savedData.kapeluszFarmeraDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Bandana Łowcy")) {
-                    Config.get().bandanaLowcyDropped += 1;
-                    Config.save();
+                    savedData.bandanaLowcyDropped += 1;
+                    SUPData.save();
                     return;
-                }if (msgString.startsWith("SkyCase » Wygrano: Kask Budowniczego")) {
-                    Config.get().kaskBudowniczegoDropped += 1;
-                    Config.save();
+                }
+                if (msgString.startsWith("SkyCase » Wygrano: Kask Budowniczego")) {
+                    savedData.kaskBudowniczegoDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Kapelusz Rybaka")) {
-                    Config.get().kapeluszRybakaDropped += 1;
-                    Config.save();
+                    savedData.kapeluszRybakaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Kapelusz Czarodzieja")) {
-                    Config.get().kapeluszCzarodziejaDropped += 1;
-                    Config.save();
+                    savedData.kapeluszCzarodziejaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Oceaniczna ruda")) {
-                    Config.get().oceanicznaRudaDropped += 1;
-                    Config.save();
+                    savedData.oceanicznaRudaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 2x Oceaniczna ruda")) {
-                    Config.get().oceanicznaRudaDropped += 2;
-                    Config.save();
+                    savedData.oceanicznaRudaDropped += 2;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 3x Oceaniczna ruda")) {
-                    Config.get().oceanicznaRudaDropped += 3;
-                    Config.save();
+                    savedData.oceanicznaRudaDropped += 3;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Wybitna przynęta")) {
-                    Config.get().wybitnaPrzynetaDropped++;
-                    Config.save();
+                    savedData.wybitnaPrzynetaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Dobra przynęta")) {
-                    Config.get().dobraPrzynetaDropped += 1;
-                    Config.save();
+                    savedData.dobraPrzynetaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 2x Dobra przynęta")) {
-                    Config.get().dobraPrzynetaDropped += 2;
-                    Config.save();
+                    savedData.dobraPrzynetaDropped += 2;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 3x Dobra przynęta")) {
-                    Config.get().dobraPrzynetaDropped += 3;
-                    Config.save();
+                    savedData.dobraPrzynetaDropped += 3;
+                    SUPData.save();
                     return;
                 }
 
                 //PLATINUM
                 if (msgString.startsWith("SkyCase » Wygrano: Klucz do Elementium")) {
-                    Config.get().elementiumDropped++;
-                    Config.save();
+                    savedData.elementiumDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Zaklęta książka (Naprawa I)")) {
-                    Config.get().mendingDropped++;
-                    Config.save();
+                    savedData.mendingDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Blok szmaragdu")) {
-                    Config.get().emeraldBlockDropped += 1;
-                    Config.save();
+                    savedData.emeraldBlockDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 2x Blok szmaragdu")) {
-                    Config.get().emeraldBlockDropped += 2;
-                    Config.save();
+                    savedData.emeraldBlockDropped += 2;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 3x Blok szmaragdu")) {
-                    Config.get().emeraldBlockDropped += 3;
-                    Config.save();
+                    savedData.emeraldBlockDropped += 3;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 4x Blok szmaragdu")) {
-                    Config.get().emeraldBlockDropped += 4;
-                    Config.save();
+                    savedData.emeraldBlockDropped += 4;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 5x Blok szmaragdu")) {
-                    Config.get().emeraldBlockDropped += 5;
-                    Config.save();
+                    savedData.emeraldBlockDropped += 5;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Blok złota")) {
-                    Config.get().goldBlockDropped += 1;
-                    Config.save();
+                    savedData.goldBlockDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 2x Blok złota")) {
-                    Config.get().goldBlockDropped += 2;
-                    Config.save();
+                    savedData.goldBlockDropped += 2;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 3x Blok złota")) {
-                    Config.get().goldBlockDropped += 3;
-                    Config.save();
+                    savedData.goldBlockDropped += 3;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 4x Blok złota")) {
-                    Config.get().goldBlockDropped += 4;
-                    Config.save();
+                    savedData.goldBlockDropped += 4;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 5x Blok złota")) {
-                    Config.get().goldBlockDropped += 5;
-                    Config.save();
+                    savedData.goldBlockDropped += 5;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 6x Blok złota")) {
-                    Config.get().goldBlockDropped += 6;
-                    Config.save();
+                    savedData.goldBlockDropped += 6;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 7x Blok złota")) {
-                    Config.get().goldBlockDropped += 7;
-                    Config.save();
+                    savedData.goldBlockDropped += 7;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Blok żelaza")) {
-                    Config.get().ironBlockDropped += 1;
-                    Config.save();
+                    savedData.ironBlockDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 2x Blok żelaza")) {
-                    Config.get().ironBlockDropped += 2;
-                    Config.save();
+                    savedData.ironBlockDropped += 2;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 3x Blok żelaza")) {
-                    Config.get().ironBlockDropped += 3;
-                    Config.save();
+                    savedData.ironBlockDropped += 3;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 4x Blok żelaza")) {
-                    Config.get().ironBlockDropped += 4;
-                    Config.save();
+                    savedData.ironBlockDropped += 4;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 5x Blok żelaza")) {
-                    Config.get().ironBlockDropped += 5;
-                    Config.save();
+                    savedData.ironBlockDropped += 5;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 6x Blok żelaza")) {
-                    Config.get().ironBlockDropped += 6;
-                    Config.save();
+                    savedData.ironBlockDropped += 6;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: Blok redstone")) {
-                    Config.get().redstoneBlockDropped += 1;
-                    Config.save();
+                    savedData.redstoneBlockDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 2x Blok redstone")) {
-                    Config.get().redstoneBlockDropped += 2;
-                    Config.save();
+                    savedData.redstoneBlockDropped += 2;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 3x Blok redstone")) {
-                    Config.get().redstoneBlockDropped += 3;
-                    Config.save();
+                    savedData.redstoneBlockDropped += 3;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 4x Blok redstone")) {
-                    Config.get().redstoneBlockDropped += 4;
-                    Config.save();
+                    savedData.redstoneBlockDropped += 4;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 10x Ziemia")) {
-                    Config.get().dirtDropped += 10;
-                    Config.save();
+                    savedData.dirtDropped += 10;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 15x Ziemia")) {
-                    Config.get().dirtDropped += 15;
-                    Config.save();
+                    savedData.dirtDropped += 15;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 20x Ziemia")) {
-                    Config.get().dirtDropped += 20;
-                    Config.save();
+                    savedData.dirtDropped += 20;
+                    SUPData.save();
                     return;
-
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 25x Ziemia")) {
-                    Config.get().dirtDropped += 25;
-                    Config.save();
+                    savedData.dirtDropped += 25;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 30x Ziemia")) {
-                    Config.get().dirtDropped += 30;
-                    Config.save();
+                    savedData.dirtDropped += 30;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 10x Blok trawy")) {
-                    Config.get().grassBlockDropped += 10;
-                    Config.save();
+                    savedData.grassBlockDropped += 10;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 20x Blok trawy")) {
-                    Config.get().grassBlockDropped += 20;
-                    Config.save();
+                    savedData.grassBlockDropped += 20;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 30x Blok trawy")) {
-                    Config.get().grassBlockDropped += 30;
-                    Config.save();
+                    savedData.grassBlockDropped += 30;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 10x Piasek")) {
-                    Config.get().sandDropped += 10;
-                    Config.save();
+                    savedData.sandDropped += 10;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 20x Piasek")) {
-                    Config.get().sandDropped += 20;
-                    Config.save();
+                    savedData.sandDropped += 20;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » Wygrano: 30x Piasek")) {
-                    Config.get().sandDropped += 30;
-                    Config.save();
+                    savedData.sandDropped += 30;
+                    SUPData.save();
                     return;
                 }
 
                 //ELEMENTIUM
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Karambit ::")) {
-                    Config.get().karambitDropped++;
-                    Config.save();
+                    savedData.karambitDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Perun ::")) {
-                    Config.get().perunDropped++;
-                    Config.save();
+                    savedData.perunDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Cymofan ::")) {
-                    Config.get().cymofanDropped++;
-                    Config.save();
+                    savedData.cymofanDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Młot Thora ::")) {
-                    Config.get().mlotThoraDropped++;
-                    Config.save();
+                    savedData.mlotThoraDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Urizel ::")) {
-                    Config.get().urizelDropped++;
-                    Config.save();
+                    savedData.urizelDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Azada ::")) {
-                    Config.get().azadaDropped++;
-                    Config.save();
+                    savedData.azadaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Spinel ::")) {
-                    Config.get().spinelDropped++;
-                    Config.save();
+                    savedData.spinelDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Karpiołap ::")) {
-                    Config.get().karpiolapDropped++;
-                    Config.save();
+                    savedData.karpiolapDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Etherica ::")) {
-                    Config.get().ethericaDropped++;
-                    Config.save();
+                    savedData.ethericaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Łuk Legolasa ::")) {
-                    Config.get().lukLegolasaDropped++;
-                    Config.save();
+                    savedData.lukLegolasaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Arbalet ::")) {
-                    Config.get().arbaletDropped++;
-                    Config.save();
+                    savedData.arbaletDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Powrót Odysa ::")) {
-                    Config.get().powrotOdysaDropped++;
-                    Config.save();
+                    savedData.powrotOdysaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Cassis ::")) {
-                    Config.get().cassisDropped++;
-                    Config.save();
+                    savedData.cassisDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Cuirass ::")) {
-                    Config.get().cuirassDropped++;
-                    Config.save();
+                    savedData.cuirassDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Cuissot ::")) {
-                    Config.get().cuissotDropped++;
-                    Config.save();
+                    savedData.cuissotDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Cosset ::")) {
-                    Config.get().cossetDropped++;
-                    Config.save();
+                    savedData.cossetDropped += 1;
+                    SUPData.save();
                     return;
                 }
-                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Kapcie lotnika ::")) {
-                    Config.get().kapcieLotnikaDropped++;
-                    Config.save();
+                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Kaptur sztormowy ::")) {
+                    savedData.kapturSztormowyDropped += 1;
+                    SUPData.save();
+                    return;
+                }
+                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Kamizelka biwakowa ::")) {
+                    savedData.kamizelkaBiwakowaDropped += 1;
+                    SUPData.save();
+                    return;
+                }
+                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Nogawice ognioodporne ::")) {
+                    savedData.nogawiceOgnioodporneDropped += 1;
+                    SUPData.save();
+                    return;
+                }
+                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Trapery terenowe ::")) {
+                    savedData.traperyTerenoweDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Rivendell ::")) {
-                    Config.get().rivendellDropped++;
-                    Config.save();
+                    savedData.rivendellDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Impet ::")) {
-                    Config.get().impetDropped++;
-                    Config.save();
+                    savedData.impetDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Phlox ::")) {
-                    Config.get().phloxDropped++;
-                    Config.save();
+                    savedData.phloxDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Majster ::")) {
-                    Config.get().majsterDropped++;
-                    Config.save();
+                    savedData.majsterDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Magiczne wiaderko ::")) {
-                    Config.get().magiczneWiaderkoDropped++;
-                    Config.save();
+                    savedData.magiczneWiaderkoDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: StatTracker ::")) {
-                    Config.get().statTrackerDropped++;
-                    Config.save();
+                    savedData.statTrackerDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Jajko niespodzianka ::")) {
-                    Config.get().jajkoNiespodziankaDropped++;
-                    Config.save();
-                    return;
-                }
-                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Klejnot kupiecki uniwersalny ::")) {
-                    Config.get().klejnotKupieckiDropped++;
-                    Config.save();
+                    savedData.jajkoNiespodziankaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Kontroler magazynów ::")) {
-                    Config.get().kontrolerMagazynowDropped++;
-                    Config.save();
+                    savedData.kontrolerMagazynowDropped += 1;
+                    SUPData.save();
+                    return;
+                }
+                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Kapelusz pracusia ::")) {
+                    savedData.kapeluszPracusiaDropped += 1;
+                    SUPData.save();
                     return;
                 }
                 if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Tajemnice SkyUPa v.5 ::")) {
-                    Config.get().tajemniceSkyUPaDropped++;
-                    Config.save();
+                    savedData.tajemniceSkyUPaDropped += 1;
+                    SUPData.save();
+                    return;
+                }
+                if (msgString.startsWith("SkyCase » " + playerName + " otworzył Elementium i wygrał: :: Klejnot kupiecki uniwersalny ::")) {
+                    savedData.klejnotKupieckiDropped += 1;
+                    SUPData.save();
                 }
             }
         });

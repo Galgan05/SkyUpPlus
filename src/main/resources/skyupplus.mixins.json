@@ -1,16 +1,20 @@
 {
   "required": true,
   "package": "net.galgan.skyupplus.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "client": [
-    "ActionBarAccessor",
+    "AbstractContainerScreenAccessor",
+    "AbstractContainerScreenInjector",
+    "ActionBarInjector",
     "BossBarAccessor",
-    "CancelAnnouncementSound",
-    "HandledScreenAccessor",
-    "HandledScreenDraw",
+    "CancelSound",
     "HideBossBar",
     "HideScoreboard",
+    "HideVanillaHearts",
+    "MinecraftInvoker",
+    "MouseHandlerInjector",
     "OverlayMessageHook",
+    "ResourcePackPushMixin",
     "TitleAccessor"
   ],
   "injectors": {
@@ -18,5 +22,10 @@
   },
   "overwrites": {
     "requireAnnotations": true
-	}
+  },
+  "mixins": [
+    "ConnectionSendMixin",
+    "MoulConfigEditorMixin",
+    "PackRepositoryMixin"
+  ]
 }

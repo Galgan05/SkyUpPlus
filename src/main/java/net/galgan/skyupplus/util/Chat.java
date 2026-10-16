@@ -1,31 +1,29 @@
 package net.galgan.skyupplus.util;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.hud.ChatHud;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.network.chat.Component;
 
 public final class Chat {
 
-    public static void send(Text text) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client == null) return;
+    public static void send(Component text) {
+        Minecraft mc = Minecraft.getInstance();
 
         Runnable r = () -> {
-            if (client.inGameHud == null) return;
-            ChatHud chat = client.inGameHud.getChatHud();
-            if (chat != null) chat.addMessage(Text.empty()
-                    .append(Text.literal("Sky").formatted(Formatting.AQUA, Formatting.BOLD))
-                    .append(Text.literal("UP").formatted(Formatting.WHITE, Formatting.BOLD))
-                    .append(Text.literal("+ ").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
-                    .append(Text.literal("» ").formatted(Formatting.DARK_GRAY, Formatting.BOLD))
-                    .append(text));
+            ChatComponent chat = mc.gui.hud.getChat();
+            chat.addClientSystemMessage(Component.empty()
+                .append(Component.literal("Sky").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD))
+                .append(Component.literal("UP").withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD))
+                .append(Component.literal("+ ").withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD))
+                .append(Component.literal("» ").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.BOLD))
+                .append(text));
         };
 
-        if (client.isOnThread()) r.run(); else client.execute(r);
+        if (mc.isSameThread()) r.run(); else mc.execute(r);
     }
 
     public static void sendString(String string) {
-        send(Text.literal(string));
+        send(Component.literal(string));
     }
 }

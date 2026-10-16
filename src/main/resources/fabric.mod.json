@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "skyupplus",
 	"version": "${version}",
-	"name": "SkyUP+",
+	"name": "SkyUpPlus",
 	"description": "Mod na serwer SkyUP.pl mający na celu urozmaicić rozgrywkę. Mod nie jest w żadnym stopniu powiązany z administracją serwera.",
 	"authors": [
 		"Galgan"
@@ -19,6 +19,7 @@
 			}
 		}
 	},
+	"accessWidener": "skyupplus.accesswidener",
 	"license": "MIT",
 	"icon": "assets/skyupplus/img.png",
 	"environment": "client",
@@ -34,10 +35,10 @@
 		"skyupplus.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.18.4",
-		"minecraft": "~1.21.11",
-		"java": ">=21",
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
 		"fabric-api": "*",
-		"yet_another_config_lib_v3": ">=3.8.1+1.21.11-fabric"
+		"fabric-language-kotlin": "*"
 	}
 }

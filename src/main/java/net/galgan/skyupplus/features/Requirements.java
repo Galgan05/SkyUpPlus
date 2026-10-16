@@ -3,57 +3,58 @@ package net.galgan.skyupplus.features;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
-import net.galgan.skyupplus.config.Config;
-import net.galgan.skyupplus.mixin.HandledScreenAccessor;
+import net.galgan.skyupplus.config.SUPData;
+import net.galgan.skyupplus.mixin.AbstractContainerScreenAccessor;
 import net.galgan.skyupplus.util.Chat;
+import net.galgan.skyupplus.util.Inventory;
 import net.galgan.skyupplus.util.ServerRestrictor;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.LoreComponent;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public class Requirements {
-    public static Text name;
-    public static List<Text> filteredDescription;
+    public static Component name;
+    public static List<Component> filteredDescription;
     public static boolean isDisplayed;
-    public static List<Text> body = new ArrayList<>();
+    public static List<Component> body = new ArrayList<>();
 
     public static void register() {
 
-        ScreenEvents.BEFORE_INIT.register((client, screen, w, h) -> {
+        ScreenEvents.BEFORE_INIT.register((mc, screen, w, h) -> {
             if(!ServerRestrictor.isAllowed()) return;
 
-            if (!(screen instanceof HandledScreen<?> handled)) return;
+            if (!(screen instanceof AbstractContainerScreen<?> handled)) return;
             if (!CONTAINER_TITLES.contains(handled.getTitle().getString())) return;
 
             ScreenMouseEvents.beforeMouseClick(screen).register((s, click) -> {
 
                 if (click.button()!= 2) return;
 
-                Slot slot = getSlotAt(handled, click.x(), click.y());
+                Slot slot = Inventory.getSlotAt(handled, click.x(), click.y());
 
                 if (slot == null) {
                     nullVariables();
                     return;
                 }
 
-                LoreComponent lore = slot.getStack().get(DataComponentTypes.LORE);
+                ItemLore lore = slot.getItem().get(DataComponents.LORE);
 
                 if (lore == null) {
                     nullVariables();
                     return;
                 }
 
-                name = slot.getStack().getName();
+                name = slot.getItem().getHoverName();
 
-                for(Text line : lore.lines()) {
+                for(Component line : lore.lines()) {
                     if (line.getString().startsWith("▪ Zadanie ukończone!") && !name.getString().equals("» Zadanie codzienne «")) {
                         nullVariables();
                         return;
@@ -68,11 +69,11 @@ public class Requirements {
                 isDisplayed = true;
 
                 if (name.getString().equals("» Zadanie codzienne «")) {
-                    Config.get().hasSeenDaily = true;
-                    Config.save();
+                    SUPData.get().hasSeenDaily = true;
+                    SUPData.save();
                 }
 
-                Chat.send(Text.empty().append(Text.literal("Wybrano: ").formatted(Formatting.DARK_AQUA)).append(name));
+                Chat.send(Component.empty().append(Component.literal("Wybrano: ").withStyle(ChatFormatting.DARK_AQUA)).append(name));
 
                 filteredDescription = loreFilter(lore);
                 body = getBody();
@@ -87,15 +88,11 @@ public class Requirements {
                 body = new ArrayList<>();
 
                 if (message.getString().contains("Zadanie codzienne")) {
-                    Config.get().hasSeenDaily = true;
-                    Config.save();
+                    SUPData.get().hasSeenDaily = true;
+                    SUPData.save();
                 }
             }
         });
-    }
-
-    private static Slot getSlotAt(HandledScreen<?> screen, double x, double y) {
-        return ((HandledScreenAccessor) screen).invokeGetSlotAt(x, y);
     }
 
     private static void nullVariables() {
@@ -105,11 +102,11 @@ public class Requirements {
         isDisplayed = false;
     }
 
-    public static List<Text> loreFilter(LoreComponent lore) {
-        List<Text> filtered = new ArrayList<>();
+    public static List<Component> loreFilter(ItemLore lore) {
+        List<Component> filtered = new ArrayList<>();
         boolean addNext = false;
 
-        for (Text line : lore.lines()) {
+        for (Component line : lore.lines()) {
             String s = line.getString().trim();
 
             if (!s.isEmpty()) {
@@ -128,43 +125,35 @@ public class Requirements {
         return filtered;
     }
 
-    private static List<Text> getBody() {
-        List<Text> bodyText = new ArrayList<>();
+    private static List<Component> getBody() {
+        List<Component> bodyText = new ArrayList<>();
 
         if (!isDisplayed) return bodyText;
 
-        for (Text line : filteredDescription) {
-            if (line.getSiblings().isEmpty()) {
+        for (Component line : filteredDescription) {
+            List<Component> siblings = line.getSiblings();
+
+            if (siblings.isEmpty()) {
                 bodyText.add(line);
+                continue;
             }
 
-            List<Text> siblings = line.getSiblings();
-
-            if (!siblings.isEmpty() && siblings.get(0).getString().trim().startsWith("▪")) {
-                int startIndex = 1;
-                MutableText result = Text.empty();
-                for (int i = startIndex; i < siblings.size(); i++) {
-                    result.append(siblings.get(i).copy().setStyle(siblings.get(i).getStyle()));
-                }
-                bodyText.add(result);
-            } else if (!siblings.isEmpty() && siblings.get(1).getString().trim().startsWith("»")) {
-                int startIndex = 2;
-                MutableText result = Text.empty();
-                for (int i = startIndex; i < siblings.size(); i++) {
-                    result.append(siblings.get(i).copy().setStyle(siblings.get(i).getStyle()));
-                }
-                bodyText.add(result);
-            } else if (!siblings.isEmpty()) {
-                int startIndex = 1;
-                MutableText result = Text.empty();
-                for (int i = startIndex; i < siblings.size(); i++) {
-                    result.append(siblings.get(i).copy().setStyle(siblings.get(i).getStyle()));
-                }
-                bodyText.add(result);
+            // Skip the "▪" bullet, or the prefix + "»" pair, or just the first sibling
+            int startIndex = 1;
+            if (!siblings.get(0).getString().trim().startsWith("▪")
+                    && siblings.size() > 1
+                    && siblings.get(1).getString().trim().startsWith("»")) {
+                startIndex = 2;
             }
+
+            MutableComponent result = Component.empty();
+            for (int i = startIndex; i < siblings.size(); i++) {
+                result.append(siblings.get(i).copy());
+            }
+            bodyText.add(result);
         }
 
-        return new ArrayList<>(bodyText);
+        return bodyText;
     }
 
     public static final Set<String> DISALLOWED_NAMES = Set.of(

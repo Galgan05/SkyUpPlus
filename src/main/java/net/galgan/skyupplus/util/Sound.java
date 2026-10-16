@@ -1,27 +1,27 @@
 package net.galgan.skyupplus.util;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvent;
 
 public class Sound {
 
-    public static void playSound(MinecraftClient client, SoundEvent sound, SoundCategory soundCategory, float pitch) {
+    public static void playSound(Minecraft mc, SoundEvent sound, SoundSource source, float pitch) {
 
-        if (client.player != null && client.world != null) {
+        if (mc.player != null && mc.level != null) {
 
-            client.getSoundManager().play(
-                    new PositionedSoundInstance(
-                        sound.id(),
-                        soundCategory,
+            mc.getSoundManager().play(
+                    new SimpleSoundInstance(
+                        sound.location(),
+                        source,
                         1.0f,
                         pitch,
-                        client.world.random,
+                        SoundInstance.createUnseededRandom(),
                         false,
                         0,
-                        SoundInstance.AttenuationType.NONE,
+                        SimpleSoundInstance.Attenuation.NONE,
                         0.0, 0.0, 0.0,
                         true
             ));

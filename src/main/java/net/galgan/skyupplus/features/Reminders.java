@@ -1,9 +1,10 @@
 package net.galgan.skyupplus.features;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.galgan.skyupplus.config.Config;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.galgan.skyupplus.config.SUPConfig;
+import net.galgan.skyupplus.config.SUPData;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -12,21 +13,21 @@ import java.util.List;
 
 public class Reminders {
 
-    public static List<Text> body = new ArrayList<>();
-    private static String zawodyDate;
-    private static String eventyDate;
+    public static List<Component> body = new ArrayList<>();
 
     public static void register() {
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 
-            List<Text> bodyText = new ArrayList<>();
+            List<Component> bodyText = new ArrayList<>();
 
             ZonedDateTime zdt = ZonedDateTime.now(ZoneId.of("Europe/Warsaw"));
             int weekTime = (zdt.getDayOfWeek().getValue() - 1) * 86400 + zdt.getHour() * 3600 + zdt.getMinute() * 60 + zdt.getSecond();
 
             //ZAWODY
-            if (Config.get().toggleZawody) {
+            if (SUPConfig.get().reminders.toggleZawody) {
+                String zawodyDate;
+
                 if (weekTime <= 75600) {
                     zawodyDate = "Poniedziałek 21:00";
                 } else if (weekTime <= 151200) {
@@ -49,13 +50,13 @@ public class Reminders {
                     zawodyDate = "Poniedziałek 21:00";
                 }
 
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Zawody: ").formatted(Formatting.DARK_AQUA))
-                        .append(Text.literal(zawodyDate)));
+                bodyText.add(Component.empty().append(Component.literal("Zawody: ").withStyle(ChatFormatting.DARK_AQUA)).append(Component.literal(zawodyDate)));
             }
 
             //EVENTY
-            if (Config.get().toggleEventy) {
+            if (SUPConfig.get().reminders.toggleEventy) {
+                String eventyDate;
+
                 if (weekTime <= 68400) {
                     eventyDate = "Poniedziałek 19:00"; //MON 19:00
                 } else if (weekTime <= 158400) {
@@ -78,22 +79,18 @@ public class Reminders {
                     eventyDate = "Poniedziałek 19:00"; //MON 19:00
                 }
 
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Eventy: ").formatted(Formatting.DARK_PURPLE))
-                        .append(Text.literal(eventyDate)));
+                bodyText.add(Component.empty().append(Component.literal("Eventy: ").withStyle(ChatFormatting.DARK_PURPLE)).append(Component.literal(eventyDate)));
             }
 
             //DAILY QUEST
-            if (zdt.getDayOfYear() != Config.get().currentDay) {
-                Config.get().hasSeenDaily = false;
-                Config.get().currentDay = zdt.getDayOfYear();
-                Config.save();
+            if (zdt.getDayOfYear() != SUPData.get().currentDay) {
+                SUPData.get().hasSeenDaily = false;
+                SUPData.get().currentDay = zdt.getDayOfYear();
+                SUPData.save();
             }
 
-            if (Config.get().toggleDaily && !Config.get().hasSeenDaily) {
-                bodyText.add(Text.empty()
-                        .append(Text.literal("Daily: ").formatted(Formatting.YELLOW))
-                        .append(Text.literal("Dostępne")));
+            if (SUPConfig.get().reminders.toggleDaily && !SUPData.get().hasSeenDaily) {
+                bodyText.add(Component.empty().append(Component.literal("Daily: ").withStyle(ChatFormatting.YELLOW)).append(Component.literal("Dostępne")));
             }
 
             //GENERATE BODY
