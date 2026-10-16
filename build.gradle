@@ -7,6 +7,7 @@ plugins {
 repositories {
 	maven { url 'https://maven.wispforest.io/releases/' }
 	maven { url 'https://jitpack.io' }
+	maven { url "https://maven.notenoughupdates.org/releases/" }
 
 	maven {
 		name = "Terraformers"
@@ -28,8 +29,8 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	implementation "org.notenoughupdates.moulconfig:modern-26.3:9999.9999.9999"
-	shadowBundle "org.notenoughupdates.moulconfig:modern-26.3:9999.9999.9999"
+	implementation "org.notenoughupdates.moulconfig:modern-26.3:4.8.0"
+	shadowBundle "org.notenoughupdates.moulconfig:modern-26.3:4.8.0"
 	implementation "net.fabricmc:fabric-language-kotlin:1.13.13+kotlin.2.4.10"
 }
 
