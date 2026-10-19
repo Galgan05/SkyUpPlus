@@ -218,8 +218,64 @@ public class SUPConfig extends Config {
         @ConfigOption(name = "Pozycja Scoreboarda", desc = "Przenieś customowy scoreboard tam, gdzie ci odpowiada")
         @ConfigEditorButton(buttonText = "Zmień")
         public transient Runnable moveScoreboard = () -> HudEditor.open(HudElement.SCOREBOARD);
+
+        @Expose
+        @ConfigOption(name = "Skracaj Liczby", desc = "Skraca duże liczby, aby nie zajmowały tak dużo miejsca na scoreboardzie")
+        @ConfigEditorBoolean
+        public boolean shortenNumbers = true;
+
+        @Expose
+        @ConfigOption(name = "Wybór Statystyk", desc = "Wybierz, które statystyki mają się wyświetlać na scoreboardzie")
+        @Accordion
+        public ScoreboardLines scoreboardLines = new ScoreboardLines();
     }
 
+    public static class ScoreboardLines {
+        @Expose
+        @ConfigOption(name = "Portfel", desc = "Wyświetla na scoreboardzie wartość portfela")
+        @ConfigEditorBoolean
+        public boolean balance = true;
+
+        @Expose
+        @ConfigOption(name = "Punkty", desc = "Wyświetla na scoreboardzie ilość punktów")
+        @ConfigEditorBoolean
+        public boolean points = true;
+
+        @Expose
+        @ConfigOption(name = "Tokeny", desc = "Wyświetla na scoreboardzie ilość tokenów")
+        @ConfigEditorBoolean
+        public boolean tokens = true;
+
+        @Expose
+        @ConfigOption(name = "Bank", desc = "Wyświetla na scoreboardzie wartość banku")
+        @ConfigEditorBoolean
+        public boolean bank = true;
+
+        @Expose
+        @ConfigOption(name = "Poziom", desc = "Wyświetla na scoreboardzie poziom wyspy")
+        @ConfigEditorBoolean
+        public boolean level = true;
+
+        @Expose
+        @ConfigOption(name = "Limit", desc = "Wyświetla na scoreboardzie wartość limitu prac")
+        @ConfigEditorBoolean
+        public boolean limit = true;
+
+        @Expose
+        @ConfigOption(name = "Reset", desc = "Wyświetla na scoreboardzie czas do resetu limitu prac")
+        @ConfigEditorBoolean
+        public boolean reset = true;
+
+        @Expose
+        @ConfigOption(name = "Bonus", desc = "Wyświetla na scoreboardzie odliczanie do końca bonusu")
+        @ConfigEditorBoolean
+        public boolean bonus = true;
+
+        @Expose
+        @ConfigOption(name = "Umiejętności", desc = "Wyświetla na scoreboardzie ikonki i cooldown umiejętności")
+        @ConfigEditorBoolean
+        public boolean cooldowns = true;
+    }
 
     // --- CHAT ---
 
@@ -528,6 +584,39 @@ public class SUPConfig extends Config {
         @ConfigOption(name = "Pozycja Licznika XP", desc = "Przenieś licznik xp tam, gdzie ci odpowiada")
         @ConfigEditorButton(buttonText = "Zmień")
         public transient Runnable moveSkills = () -> HudEditor.open(HudElement.SKILLS);
+
+        @Expose
+        @ConfigOption(name = "Wybór Statystyk", desc = "Wybierz, które statystyki mają się wyświetlać w liczniku XP")
+        @Accordion
+        public XPLines xpLines = new XPLines();
+    }
+
+    public static class XPLines {
+        @Expose
+        @ConfigOption(name = "Praca", desc = "Włącza wyświetlanie nazwy trackowanej pracy w liczniku XP")
+        @ConfigEditorBoolean
+        public boolean jobName = true;
+
+        @Expose
+        @ConfigOption(name = "Następny Poziom", desc = "Włącza wyświetlanie następnego poziomu w liczniku XP")
+        @ConfigEditorBoolean
+        public boolean nextLevel = true;
+
+        @Expose
+        @ConfigOption(name = "Pozostałe XP", desc = "Włącza wyświetlanie nazwy pozostałego XP w liczniku XP")
+        @ConfigEditorBoolean
+        public boolean remainingXP = true;
+
+        @Expose
+        @ConfigOption(name = "XP/min", desc = "Włącza wyświetlanie XP/min w liczniku XP")
+        @ConfigEditorBoolean
+        public boolean xpPerMin= true;
+
+        @Expose
+        @ConfigOption(name = "Przewidywany Czas", desc = "Włącza wyświetlanie przewidywanego czasu w liczniku XP")
+        @ConfigEditorBoolean
+        public boolean timeRemaining = true;
+
     }
 
     // --- FISHING ---
@@ -583,6 +672,11 @@ public class SUPConfig extends Config {
         @ConfigOption(name = "Mapa Dungeonu", desc = "Ustawienia customowej mapy dungeonu")
         @Accordion
         public DungeonMap dungeonMap = new DungeonMap();
+
+        @Expose
+        @ConfigOption(name = "Widoczniejsze Pojemniki", desc = "Zmienia teksturę pojemników w dungeonach na bardziej rzucającą się w oczy")
+        @ConfigEditorBoolean
+        public boolean highlightContainers = true;
 
         @Expose
         @ConfigOption(name = "Graj Dźwięk Dungeonu", desc = "Dodaje dźwięk zakończenia cooldownu dungeonu")

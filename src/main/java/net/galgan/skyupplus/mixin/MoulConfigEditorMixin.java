@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(MoulConfigEditor.class)
+@Mixin(value = MoulConfigEditor.class, remap = false)
 public class MoulConfigEditorMixin {
     @ModifyConstant(method = "render", constant = @Constant(stringValue = "Categories"), remap = false)
     private String renameCategories(String original) {

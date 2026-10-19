@@ -491,7 +491,7 @@ public final class DungeonMapHud {
             List<String> bosses = status.bossesIn(room);
             if (bosses != null) {
                 drawBossIcons(graphics, roomRect, bosses);
-            } else if (config().containerIcons && isUntouched(room)) {
+            } else if (config().containerIcons && shouldDrawIcon(room)) {
                 drawIcons(graphics, roomRect, List.of(sherdFor(room)));
             }
         }
@@ -687,7 +687,7 @@ public final class DungeonMapHud {
 
     // True if the room still has as many containers as the layout files say. A room that was never
     // counted is untouched too. Rooms without container data, or with nothing to loot, never are.
-    private static boolean isUntouched(DungeonGrid.Room room) {
+    private static boolean shouldDrawIcon(DungeonGrid.Room room) {
         if (room.isStart()) {
             return false;
         }
@@ -698,7 +698,7 @@ public final class DungeonMapHud {
         }
 
         RoomContainerCounter.Counts counts = RoomContainerCounter.getKnown(room);
-        return counts == null || counts.total() == info.totalContainers();
+        return counts == null || counts.total() > 0;
     }
 
     // A "random" sherd based on the room's position, so it stays the same and doesn't flicker

@@ -1,6 +1,7 @@
 package net.galgan.skyupplus.features;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.galgan.skyupplus.config.SUPConfig;
 import net.galgan.skyupplus.util.Number;
 import net.galgan.skyupplus.util.ServerRestrictor;
 import net.minecraft.client.Minecraft;
@@ -11,6 +12,8 @@ import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,6 +36,18 @@ public class Scoreboard {
     private static boolean customScoreboard;
 
     private static final Set<Character> ABILITY_CHARS = Set.of('\uF011','\uF012','\uF013','\uF014','\uF015','\uF016','\uF017','\uF018','\uF019','\uF01A','\uF01B','\uF01C','\uF01D','\uF01E','\uF050','\uF051');
+
+    private static final DecimalFormat INT_FORMAT;
+    private static final DecimalFormat DOUBLE_FORMAT;
+
+    static {
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.ROOT);
+        symbols.setGroupingSeparator(' ');
+        symbols.setDecimalSeparator(',');
+
+        INT_FORMAT = new DecimalFormat("#,##0", symbols);
+        DOUBLE_FORMAT = new DecimalFormat("#,##0.00", symbols);
+    }
 
     public static void register() {
 
@@ -64,7 +79,11 @@ public class Scoreboard {
                 }
                 else if (line.startsWith("Limit")) {
                     Matcher m = Pattern.compile("([\\d, ]+/[\\d ]+)").matcher(line);
-                    limit = m.find() ? m.group(1).trim().replace(" ", "").replace(",", ".") : "-";
+                    if (SUPConfig.get().scoreboard.shortenNumbers) {
+                        limit = m.find() ? m.group(1).trim().replace(" ", "").replace(",", ".") : "-";
+                    } else {
+                        limit = m.find() ? m.group(1).trim().replace(",", ".") : "-";
+                    }
                 }
                 else if (line.startsWith("Reset")) {
                     reset = parseStringField(line, "Reset limitu:\\s*(.+)");
@@ -88,35 +107,49 @@ public class Scoreboard {
     private static List<Component> getCustomScoreboard() {
         List<Component> bodyText = new ArrayList<>();
 
-        bodyText.add(Component.empty()
-                .append(Component.literal("Portfel: ").withStyle(ChatFormatting.RED))
-                .append(Component.literal(sc).withStyle(ChatFormatting.YELLOW)));
-        bodyText.add(Component.empty()
-                .append(Component.literal("Punkty: ").withStyle(ChatFormatting.RED))
-                .append(Component.literal(sp).withStyle(ChatFormatting.YELLOW)));
-        bodyText.add(Component.empty()
-                .append(Component.literal("Tokeny: ").withStyle(ChatFormatting.RED))
-                .append(Component.literal(st).withStyle(ChatFormatting.YELLOW)));
-        bodyText.add(Component.empty()
-                .append(Component.literal("Bank: ").withStyle(ChatFormatting.AQUA))
-                .append(Component.literal(bank).withStyle(ChatFormatting.YELLOW)));
-        bodyText.add(Component.empty()
-                .append(Component.literal("Poziom: ").withStyle(ChatFormatting.AQUA))
-                .append(Component.literal(level).withStyle(ChatFormatting.YELLOW)));
-        bodyText.add(Component.empty()
-                .append(Component.literal("Limit: ").withStyle(ChatFormatting.GREEN))
-                .append(Component.literal(limit).withStyle(ChatFormatting.YELLOW)));
-        bodyText.add(Component.empty()
-                .append(Component.literal("Reset: ").withStyle(ChatFormatting.GREEN))
-                .append(Component.literal(reset).withStyle(ChatFormatting.YELLOW)));
+        if (SUPConfig.get().scoreboard.scoreboardLines.balance) {
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Portfel: ").withStyle(ChatFormatting.RED))
+                    .append(Component.literal(sc).withStyle(ChatFormatting.YELLOW)));
+        }
+        if (SUPConfig.get().scoreboard.scoreboardLines.points) {
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Punkty: ").withStyle(ChatFormatting.RED))
+                    .append(Component.literal(sp).withStyle(ChatFormatting.YELLOW)));
+        }
+        if (SUPConfig.get().scoreboard.scoreboardLines.tokens) {
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Tokeny: ").withStyle(ChatFormatting.RED))
+                    .append(Component.literal(st).withStyle(ChatFormatting.YELLOW)));
+        }
+        if (SUPConfig.get().scoreboard.scoreboardLines.bank) {
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Bank: ").withStyle(ChatFormatting.AQUA))
+                    .append(Component.literal(bank).withStyle(ChatFormatting.YELLOW)));
+        }
+        if (SUPConfig.get().scoreboard.scoreboardLines.level) {
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Poziom: ").withStyle(ChatFormatting.AQUA))
+                    .append(Component.literal(level).withStyle(ChatFormatting.YELLOW)));
+        }
+        if (SUPConfig.get().scoreboard.scoreboardLines.limit) {
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Limit: ").withStyle(ChatFormatting.GREEN))
+                    .append(Component.literal(limit).withStyle(ChatFormatting.YELLOW)));
+        }
+        if (SUPConfig.get().scoreboard.scoreboardLines.reset) {
+            bodyText.add(Component.empty()
+                    .append(Component.literal("Reset: ").withStyle(ChatFormatting.GREEN))
+                    .append(Component.literal(reset).withStyle(ChatFormatting.YELLOW)));
+        }
 
-        if (!bonus.equals("-")) {
+        if (!bonus.equals("-") && SUPConfig.get().scoreboard.scoreboardLines.bonus) {
             bodyText.add(Component.empty()
                     .append(Component.literal("Bonus: ").withStyle(ChatFormatting.GOLD))
                     .append(Component.literal(bonus).withStyle(ChatFormatting.YELLOW)));
         }
 
-        if (abilities != null && !abilities.isEmpty()) {
+        if (abilities != null && !abilities.isEmpty() && SUPConfig.get().scoreboard.scoreboardLines.cooldowns) {
             bodyText.addAll(abilities);
         }
 
@@ -198,9 +231,13 @@ public class Scoreboard {
         Matcher m = Pattern.compile(regex).matcher(line);
         if (m.find()) {
             try {
-                String raw = m.group(m.groupCount() > 0 ? 1 : 0)
-                        .trim().replace(",", ".").replace(" ", "");
-                return Number.format(Double.parseDouble(raw)) + suffix;
+                String raw = m.group(m.groupCount() > 0 ? 1 : 0).trim().replace(",", ".").replace(" ", "");
+
+                if (SUPConfig.get().scoreboard.shortenNumbers) {
+                    return Number.format(Double.parseDouble(raw)) + suffix;
+                } else {
+                    return DOUBLE_FORMAT.format(Double.parseDouble(raw)) + suffix;
+                }
             } catch (NumberFormatException ignored) {}
         }
         return "-";
@@ -211,7 +248,11 @@ public class Scoreboard {
         if (m.find()) {
             try {
                 String raw = m.group(1).trim().replace(" ", "");
-                return Integer.parseInt(raw) + suffix;
+                if (SUPConfig.get().scoreboard.shortenNumbers) {
+                    return Number.format(Integer.parseInt(raw)) + suffix;
+                } else {
+                    return INT_FORMAT.format(Integer.parseInt(raw)) + suffix;
+                }
             } catch (NumberFormatException ignored) {}
         }
         return "-";

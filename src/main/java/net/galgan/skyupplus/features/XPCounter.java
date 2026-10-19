@@ -132,13 +132,23 @@ public class XPCounter {
         boolean estimate = !tracker.isStable();
 
         List<Component> lines = new ArrayList<>();
-        lines.add(line("Praca: ", tracker.name));
-        lines.add(line("Następny poziom: ", String.valueOf(tracker.level + 1)));
-        lines.add(line("Pozostałe xp: ", Number.format(xpLeft)));
+        if (SUPConfig.get().xpcounter.xpLines.jobName) {
+            lines.add(line("Praca: ", tracker.name));
+        }
+        if (SUPConfig.get().xpcounter.xpLines.nextLevel) {
+            lines.add(line("Następny Poziom: ", String.valueOf(tracker.level + 1)));
+        }
+        if (SUPConfig.get().xpcounter.xpLines.remainingXP) {
+            lines.add(line("Pozostałe XP: ", Number.format(xpLeft)));
+        }
 
         if (Double.isNaN(xpPerSecond) || xpPerSecond <= 0) {
-            lines.add(line("xp/min: ", "-"));
-            lines.add(line("Przewidywany czas: ", "-"));
+            if (SUPConfig.get().xpcounter.xpLines.xpPerMin) {
+                lines.add(line("XP/min: ", "-"));
+            }
+            if (SUPConfig.get().xpcounter.xpLines.timeRemaining) {
+                lines.add(line("Przewidywany Czas: ", "-"));
+            }
             return lines;
         }
 
@@ -155,8 +165,12 @@ public class XPCounter {
             rateLine.append(Component.literal(" (pauza)").withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        lines.add(rateLine);
-        lines.add(line("Przewidywany czas: ", prefix + Number.formatTime(secondsLeft), valueColor));
+        if (SUPConfig.get().xpcounter.xpLines.xpPerMin) {
+            lines.add(rateLine);
+        }
+        if (SUPConfig.get().xpcounter.xpLines.timeRemaining) {
+            lines.add(line("Przewidywany czas: ", prefix + Number.formatTime(secondsLeft), valueColor));
+        }
         return lines;
     }
 
