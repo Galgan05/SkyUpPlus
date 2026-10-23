@@ -3,6 +3,7 @@ package net.galgan.skyupplus.mixin;
 import com.mojang.logging.LogUtils;
 import net.galgan.skyupplus.config.SUPConfig;
 import net.galgan.skyupplus.resourcepack_saver.ServerPackCache;
+import net.galgan.skyupplus.resourcepack_saver.ServerPackStorage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
 import net.minecraft.client.multiplayer.ServerData;
@@ -49,14 +50,15 @@ public abstract class ResourcePackPushMixin {
             return;
         }
 
-        boolean serverPacksDisabled = serverData != null
-                && serverData.getResourcePackStatus() == ServerData.ServerPackStatus.DISABLED;
+        boolean serverPacksDisabled = serverData != null && serverData.getResourcePackStatus() == ServerData.ServerPackStatus.DISABLED;
+
         if (serverPacksDisabled) {
             return;
         }
 
         if (!ServerPackCache.alreadyHavePack(packHash)) {
-            LOGGER.info("[SkyUP+] Resource pack is new or changed, downloading it");
+            LOGGER.info("[SkyUP+] Resource pack is new or changed, downloading it (server: {}, loaded: {})",
+                    packet.hash(), ServerPackStorage.getLoadedPackHash());
             ServerPackCache.waitingForDownload = true;
             ServerPackCache.expectedHash = packHash;
             return;

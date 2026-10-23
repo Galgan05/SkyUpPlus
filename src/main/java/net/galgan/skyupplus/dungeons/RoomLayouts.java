@@ -4,15 +4,14 @@ import net.galgan.skyupplus.dungeons.layouts.Layouts1x1;
 import net.galgan.skyupplus.dungeons.layouts.Layouts1x2;
 import net.galgan.skyupplus.dungeons.layouts.Layouts1x3;
 import net.galgan.skyupplus.dungeons.layouts.Layouts2x2;
-import net.galgan.skyupplus.dungeons.layouts.Layouts3x3;
+import net.galgan.skyupplus.dungeons.layouts.Layouts5x5;
 import net.galgan.skyupplus.dungeons.layouts.RoomData.RoomType;
-import net.galgan.skyupplus.dungeons.layouts.RoomData.RoomVariant;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-// Looks up rooms in the layout files
+// Looks up room doors in the layout files. Spawner and container counts come from scanning (see LearnedRooms).
 public final class RoomLayouts {
 
     private static final Map<String, Map<String, RoomType>> ROOMS_BY_SIZE = Map.of(
@@ -20,7 +19,7 @@ public final class RoomLayouts {
             "1x2", Layouts1x2.ROOMS,
             "1x3", Layouts1x3.ROOMS,
             "2x2", Layouts2x2.ROOMS,
-            "3x3", Layouts3x3.ROOMS
+            "5x5", Layouts5x5.ROOMS
     );
 
     public enum Side { BOTTOM, TOP, LEFT, RIGHT }
@@ -29,17 +28,6 @@ public final class RoomLayouts {
     public record LocalDoor(Side side, int widthTile, int lengthTile) {}
 
     private RoomLayouts() {}
-
-    // Rooms missing from the layout files get the defaults (1 spawner, containers not counted)
-    public static RoomVariant variant(int width, int length, String letter, int number) {
-        RoomType type = findRoomType(width, length, letter);
-
-        if (type == null) {
-            return RoomVariant.defaults(number);
-        }
-
-        return type.variant(number);
-    }
 
     public static List<LocalDoor> doors(int width, int length, String letter) {
         List<LocalDoor> doors = new ArrayList<>();

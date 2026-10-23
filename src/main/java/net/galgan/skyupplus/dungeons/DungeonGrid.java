@@ -15,7 +15,7 @@ import java.util.Map;
 public final class DungeonGrid {
 
     public static final int CELL_SIZE = 13;
-    private static final String START_LABEL = "3x3-start-1";
+    private static final String START_LABEL = "5x5-start-1";
 
     public record Cell(int gx, int gz) {}
 
@@ -24,19 +24,35 @@ public final class DungeonGrid {
 
     // width and length are in cells, as written on the sign ("1x2" = 1 wide, 2 long).
     // cells and doors are already turned to match the room's rotation.
-    public record Room(Cell anchor, int width, int length, int rotation, String label,
-                       List<Cell> cells, List<Door> doors, RoomData.RoomVariant info) {
+    public record Room(Cell anchor, int width, int length, int rotation, String label, int number,
+                       List<Cell> cells, List<Door> doors) {
 
         public boolean isStart() {
             return label.equals(START_LABEL);
         }
 
+        // What was counted in this room code during this dungeon,
+        // otherwise a guess: 1 spawner, containers not counted yet.
+        // The start room never has spawners or loot.
+        public RoomData.RoomVariant info() {
+            if (isStart()) {
+                return RoomData.RoomVariant.defaults(number).spawners(0).empty();
+            }
+
+            RoomData.RoomVariant learned = LearnedRooms.get(label);
+            if (learned != null) {
+                return learned;
+            }
+
+            return RoomData.RoomVariant.defaults(number);
+        }
+
         public boolean hasSpawner() {
-            return info.hasSpawner();
+            return info().hasSpawner();
         }
 
         public int spawners() {
-            return info.spawners();
+            return info().spawners();
         }
     }
 
@@ -208,10 +224,8 @@ public final class DungeonGrid {
             doors.add(corner.turnDoor(anchor, localDoor));
         }
 
-        RoomData.RoomVariant info = RoomLayouts.variant(width, length, letter, parseNumber(sign.line3()));
-
-        return new Room(anchor, width, length, sign.rotation(), sign.line3(),
-                List.copyOf(cells), List.copyOf(doors), info);
+        return new Room(anchor, width, length, sign.rotation(), sign.line3(), parseNumber(sign.line3()),
+                List.copyOf(cells), List.copyOf(doors));
     }
 
     // Where the sign sits in its room, and which way the room extends from it.

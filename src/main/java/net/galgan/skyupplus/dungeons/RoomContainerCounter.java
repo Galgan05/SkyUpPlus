@@ -73,6 +73,11 @@ public final class RoomContainerCounter {
             currentRoom = null;
             currentCounts = null;
             KNOWN.clear();
+
+            // Learned room codes only belong to this dungeon
+            if (mc.level == null || !SignScanner.isInDungeon(mc.level)) {
+                LearnedRooms.clear();
+            }
             return;
         }
 
@@ -143,8 +148,27 @@ public final class RoomContainerCounter {
         }
 
         ticksUntilRecount = RECOUNT_TICKS;
-        currentCounts = count(mc.level, boxOf(grid, currentRoom));
+        Box box = boxOf(grid, currentRoom);
+        currentCounts = count(mc.level, box);
         KNOWN.put(currentRoom.anchor(), currentCounts);
+
+        // Trust what we see. Waits for every chunk, so a half-loaded room isn't remembered with too few containers.
+        if (allChunksLoaded(mc.level, box)) {
+            LearnedRooms.learn(currentRoom.label(), currentRoom.number(), countSpawners(box), currentCounts);
+        }
+    }
+
+    // Spawners seen so far inside the room, active or cleared
+    private static int countSpawners(Box box) {
+        int spawners = 0;
+
+        for (SpawnerScanner.SpawnerPos spawner : SpawnerScanner.getAll()) {
+            if (box.contains(spawner.x(), spawner.z())) {
+                spawners++;
+            }
+        }
+
+        return spawners;
     }
 
     private static Box boxOf(DungeonGrid grid, DungeonGrid.Room room) {

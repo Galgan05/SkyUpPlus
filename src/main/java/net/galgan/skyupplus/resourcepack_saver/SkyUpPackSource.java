@@ -23,6 +23,9 @@ public class SkyUpPackSource implements RepositorySource {
 
     @Override
     public void loadPacks(Consumer<Pack> addPack) {
+        LOGGER.info("[SkyUP+] Pack source running: enabled={}, newest saved pack={}",
+                SUPConfig.get().main.automaticResourcePack, ServerPackStorage.findNewestPack());
+
         ServerPackStorage.setLoadedPackHash(null);
 
         if (!SUPConfig.get().main.automaticResourcePack) {

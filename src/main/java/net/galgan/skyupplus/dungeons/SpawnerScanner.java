@@ -9,6 +9,7 @@ import net.minecraft.util.Util;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -111,6 +112,11 @@ public final class SpawnerScanner {
                 entry.setValue(new State(true, 0));
             }
         }
+    }
+
+    // Every spawner seen so far, active or cleared
+    public static Set<SpawnerPos> getAll() {
+        return Collections.unmodifiableSet(SPAWNERS.keySet());
     }
 
     public static Set<SpawnerPos> getCleared() {

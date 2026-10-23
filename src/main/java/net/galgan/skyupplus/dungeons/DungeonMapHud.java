@@ -685,15 +685,15 @@ public final class DungeonMapHud {
                 ICON_TEXTURE_SIZE, ICON_TEXTURE_SIZE, ICON_TEXTURE_SIZE, ICON_TEXTURE_SIZE);
     }
 
-    // True if the room still has as many containers as the layout files say. A room that was never
-    // counted is untouched too. Rooms without container data, or with nothing to loot, never are.
+    // True while the room still has something to loot. Rooms without container data yet are
+    // assumed to have some. Rooms known to have nothing to loot never get an icon.
     private static boolean shouldDrawIcon(DungeonGrid.Room room) {
         if (room.isStart()) {
             return false;
         }
 
         RoomData.RoomVariant info = room.info();
-        if (!info.containersCounted() || info.totalContainers() == 0) {
+        if (info.containersCounted() && info.totalContainers() == 0) {
             return false;
         }
 

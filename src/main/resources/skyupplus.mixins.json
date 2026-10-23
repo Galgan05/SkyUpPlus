@@ -15,17 +15,15 @@
     "MouseHandlerInjector",
     "OverlayMessageHook",
     "ResourcePackPushMixin",
-    "TitleAccessor"
+    "TitleAccessor",
+    "ConnectionSendMixin",
+    "PackRepositoryMixin",
+    "MoulConfigEditorMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "overwrites": {
     "requireAnnotations": true
-  },
-  "mixins": [
-    "ConnectionSendMixin",
-    "MoulConfigEditorMixin",
-    "PackRepositoryMixin"
-  ]
+  }
 }
